@@ -1,0 +1,19 @@
+{
+  "name": "le-ghost-producer",
+  "version": "1.0.0",
+  "description": "Bot discord pour le conseil",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aymeric Ingargiola",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/builders": "^0.13.0",
+    "@discordjs/rest": "^0.4.1",
+    "discord-api-types": "^0.33.0",
+    "discord.js": "^13.7.0",
+    "sequelize": "^6.20.0",
+    "sqlite3": "^5.0.8"
+  }
+}
