@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const path = require('node:path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
