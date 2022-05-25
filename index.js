@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Sequelize, Model, DataTypes } = require('sequelize');
 const { Client, Collection, Intents } = require('discord.js');
-const { token } = require('./config.json');
+const { token, guildId } = require('./config.json');
 
 // Create a new client instance
 const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
@@ -27,13 +27,13 @@ const MessagesDb = sequelize.define('messages', {
 	content: DataTypes.TEXT
 });
 
-
 client.commands = new Collection();
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
     await MessagesDb.sync();
 	module.exports.client = client;
+	module.exports.guild = client.guilds.cache.get(guildId);
 	module.exports.MessagesDb = MessagesDb;
 
 	const commandsPath = path.join(__dirname, 'commands');
