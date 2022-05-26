@@ -1,9 +1,10 @@
+const {COMMON, client, MessagesDb} = require("../index");
 const tools = require('../tools/tools');
 module.exports = {
-    async processMessages(client, MessagesDb, force) {
+    async processMessages(force) {
         const channels = client.channels.cache;
         const ignoreChans = [];
-        const ignoreUsers = ['978622256135671868'];
+        const ignoreUsers = [COMMON.users["Le Ghost Producer#9105"].id];
         const textChannels = channels.filter(chan => chan.type === 'GUILD_TEXT' && !ignoreChans.includes(chan.id));
         await tools.asyncForEach(textChannels, async (chan) => {
             let lastMessageId;

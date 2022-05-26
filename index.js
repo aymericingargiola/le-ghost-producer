@@ -4,6 +4,7 @@ const path = require('node:path');
 const { Sequelize, Model, DataTypes } = require('sequelize');
 const { Client, Collection, Intents } = require('discord.js');
 const { token, guildId } = require('./config.json');
+const COMMON = require('./common.json');
 
 // Create a new client instance
 const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
@@ -32,6 +33,7 @@ client.commands = new Collection();
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
     await MessagesDb.sync();
+	module.exports.COMMON = COMMON;
 	module.exports.client = client;
 	module.exports.guild = client.guilds.cache.get(guildId);
 	module.exports.MessagesDb = MessagesDb;
@@ -57,6 +59,13 @@ client.once('ready', async () => {
 			client.on(event.name, (...args) => event.execute(...args));
 		}
 	}
+
+	// Jobs
+	const { syncMessages } = require('./crons/syncMessages');
+	syncMessages()
+
+	const { writePostOfTheWeek } = require('./crons/postsOfTheWeek');
+	writePostOfTheWeek()
 });
 
 client.on('interactionCreate', async interaction => {

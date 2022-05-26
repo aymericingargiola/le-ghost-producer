@@ -1,9 +1,9 @@
-const {client, MessagesDb} = require("../index");
+const {client, MessagesDb, COMMON} = require("../index");
 module.exports = {
 	name: 'messageCreate',
 	async execute(messageCreate) {
 		const ignoreChans = [];
-        const ignoreUsers = ['978622256135671868'];
+        const ignoreUsers = [COMMON.users["Le Ghost Producer#9105"].id];
 		if (!ignoreChans.includes(messageCreate.channelId) && !ignoreUsers.includes(messageCreate.author.id)) {
 			console.log(`${messageCreate.author.tag}[${messageCreate.author}] a écrit "${messageCreate}" dans ${messageCreate.channel.name}[${messageCreate.channel}] le ${new Date().toISOString()}`);
 			console.log("sauvegarde dans la ddb...");

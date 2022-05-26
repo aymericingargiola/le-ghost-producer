@@ -2,24 +2,47 @@ const dates = require('../tools/dates');
 const { getUserNameById, getUserNickNameById } = require('./getUserInfos');
 const { getChannelNameById } = require('./getChannelsInfos');
 const { MessagesDb } = require("../index");
+const { MessageEmbed } = require('discord.js');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 module.exports = {
-    async getPostsByDate(dateBegin, dateEnd) {
+    async getPostsByDate(options) {
 		let messages = []
-		if (!dateEnd) {
+		if (!options.dateEnd && !options.userId) {
 			messages = await MessagesDb.findAll({
 				where: {
 					date: {
-						[Op.gte]: dateBegin
+						[Op.gte]: options.dateBegin
 					}
 				}
 			});
-		} else {
+		} else if (options.dateEnd && !options.userId) {
 			messages = await MessagesDb.findAll({
 				where: {
 					date: {
-						[Op.between]: [dateBegin, dateEnd]
+						[Op.between]: [options.dateBegin, options.dateEnd]
+					}
+				}
+			});
+		} else if (!options.dateEnd && options.userId) {
+			messages = await MessagesDb.findAll({
+				where: {
+					date: {
+						[Op.gte]: options.dateBegin
+					},
+					userId: {
+						[Op.like]: options.userId
+					}
+				}
+			});
+		} else if (options.dateEnd && options.userId) {
+			messages = await MessagesDb.findAll({
+				where: {
+					date: {
+						[Op.between]: [options.dateBegin, options.dateEnd]
+					},
+					userId: {
+						[Op.like]: options.userId
 					}
 				}
 			});
@@ -31,18 +54,36 @@ module.exports = {
 			let arr = await previousPromise;
 			const msg = Object.assign({}, message)
 			const userId = msg.dataValues.userid
+			const chanId = msg.dataValues.channelid
 			const userExist = arr.findIndex(i => i.id === userId)
 			if (userExist === -1) {
 				const name = await getUserNameById(userId)
 				const nickname = await getUserNickNameById(userId)
+				const chanName = await getChannelNameById(chanId)
 				arr.push({
 					id: userId,
 					name: name,
 					nickname: nickname,
-					number: 1
+					number: 1,
+					chans: [{
+						id: chanId,
+						name: chanName,
+						number: 1
+					}]
 				})
 			}
 			else {
+				const chanExist = arr[userExist].chans.findIndex(i => i.id === chanId)
+				if (chanExist === -1) {
+					const chanName = await getChannelNameById(chanId)
+					arr[userExist].chans.push({
+						id: chanId,
+						name: chanName,
+						number: 1
+					})
+				} else {
+					arr[userExist].chans[chanExist].number += 1
+				}
 				arr[userExist].number += 1
 			}
 			return arr
@@ -54,8 +95,8 @@ module.exports = {
 			let arr = await previousPromise;
 			const msg = Object.assign({}, message)
 			const chanId = msg.dataValues.channelid
-			const userExist = arr.findIndex(i => i.id === chanId)
-			if (userExist === -1) {
+			const chanExist = arr.findIndex(i => i.id === chanId)
+			if (chanExist === -1) {
 				const name = await getChannelNameById(chanId)
 				arr.push({
 					id: chanId,
@@ -64,15 +105,15 @@ module.exports = {
 				})
 			}
 			else {
-				arr[userExist].number += 1
+				arr[chanExist].number += 1
 			}
 			return arr
 		}, Promise.resolve([]))
         return resultsByChannels
     },
-	async getDailyPosts() {
+	async getDailyPosts(userId) {
 		const date = dates.today(true)
-		const messages = await module.exports.getPostsByDate(date)
+		const messages = await module.exports.getPostsByDate({dateBegin: date, userId: userId})
 		const resultByUsers = await module.exports.resultByUsers(messages)
 		const resultByChannels = await module.exports.resultByChannels(messages)
 		return {
@@ -80,9 +121,9 @@ module.exports = {
 			byChannels: resultByChannels
 		}
     },
-	async getWeeklyPosts() {
+	async getWeeklyPosts(userId) {
 		const date = dates.beginingOfTheWeek()
-		const messages = await module.exports.getPostsByDate(date)
+		const messages = await module.exports.getPostsByDate({dateBegin: date, userId: userId})
 		const resultByUsers = await module.exports.resultByUsers(messages)
 		const resultByChannels = await module.exports.resultByChannels(messages)
 		return {
@@ -90,4 +131,33 @@ module.exports = {
 			byChannels: resultByChannels
 		}
     },
+	buildMessageDetailsString(messages, title, userId) {
+		let arr = messages
+		arr.sort(function (a, b) {
+			return b.number - a.number;
+		})
+		const userPosition = userId ? arr.findIndex(u => u.id === userId) : null
+		arr = userId ? arr.filter(u => u.id === userId) : arr.slice(0, 3)
+		let str = ` \n**${title}**\n\n`
+		arr.forEach((m, index) => {
+			m.chans.sort(function (a, b) {
+				return b.number - a.number;
+			})
+			if (index != 0) {
+				str += '\n'
+			}
+			str += `${(userPosition ? userPosition : index)+1 === 1 ? '👑' : ''} ${userPosition ? userPosition+1 : index+1}${(userPosition ? userPosition : index)+1 === 1 ? 'er' : 'eme'} - ${m.nickname ? m.nickname : m.name} ${(userPosition ? userPosition : index)+1 === 1 ? '👑' : ''} : **${m.number}**\n`
+			str += "```"
+			m.chans.forEach((c, index) => {
+				if (index === 0) {
+					str += `${c.name} : ${c.number}`
+				} else {
+					str += `
+${c.name} : ${c.number}`
+				}
+			})
+			str += "```"
+		})
+		return str
+	}
 };
