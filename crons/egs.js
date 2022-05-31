@@ -7,7 +7,7 @@ const egsUrl = "https://store.epicgames.com";
 module.exports = {
     async getFreeGames() {
         var job = new CronJob(
-            '0 0 20 */ * *',
+            '0 20 * * *',
             async function() {
                 console.log("Checking new Epic Games Store free games...")
                 let freeGames = [];
