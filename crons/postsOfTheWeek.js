@@ -5,7 +5,7 @@ const { getChannelById } = require('../helpers/getChannelsInfos');
 module.exports = {
     async writePostOfTheWeek() {
         var job = new CronJob(
-            '0 23 */7 * SUN',
+            '0 23 * * SUN',
             async function() {
                 const channel = await getChannelById(COMMON.channels["🚨annonces📣"].id)
                 const dailyPosts = await getWeeklyPosts()
