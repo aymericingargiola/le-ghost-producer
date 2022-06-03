@@ -28,7 +28,7 @@ module.exports = {
                     const title = game.title;
                     const offerType = game.offerType.toLowerCase();
                     const productSlug = game.productSlug;
-                    const url = `${egsUrl}/${offerType === "bundle" ? "bundles" : offerType === "game" ? "games" : "applications"}/${productSlug}`;
+                    const url = `${egsUrl}/${offerType === "bundle" ? "bundles" : "p"}/${productSlug}`;
                     const startDate = game.promotions.promotionalOffers[0].promotionalOffers[0].startDate;
                     const endDate = game.promotions.promotionalOffers[0].promotionalOffers[0].endDate;
                     console.log(`${title}[${id}] is a new free game !`)
