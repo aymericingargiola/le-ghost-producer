@@ -38,17 +38,29 @@ const EgsFreeGamesDb = sequelize.define('egsFreeGamesDb', {
 	endDate: DataTypes.STRING
 });
 
+const PrimeGamingFreeGamesDb = sequelize.define('egsFreeGamesDb', {
+	id: {
+		type: DataTypes.STRING,
+		primaryKey: true
+	},
+    title: DataTypes.STRING,
+	startDate: DataTypes.STRING,
+	endDate: DataTypes.STRING
+});
+
 client.commands = new Collection();
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
     await MessagesDb.sync();
 	await EgsFreeGamesDb.sync();
+	await PrimeGamingFreeGamesDb.sync();
 	module.exports.COMMON = COMMON;
 	module.exports.client = client;
 	module.exports.guild = client.guilds.cache.get(guildId);
 	module.exports.MessagesDb = MessagesDb;
 	module.exports.EgsFreeGamesDb = EgsFreeGamesDb;
+	module.exports.PrimeGamingFreeGamesDb = PrimeGamingFreeGamesDb;
 
 	const commandsPath = path.join(__dirname, 'commands');
 	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -79,8 +91,11 @@ client.once('ready', async () => {
 	const { writePostOfTheWeek } = require('./crons/postsOfTheWeek');
 	writePostOfTheWeek()
 
-	const { getFreeGames } = require('./crons/egs');
-	getFreeGames()
+	const egs = require('./crons/egs');
+	egs.getFreeGames()
+
+	const primeGaming = require('./crons/primeGaming');
+	primeGaming.getFreeGames()
 });
 
 client.on('interactionCreate', async interaction => {
