@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Sequelize, Model, DataTypes } = require('sequelize');
 const { Client, Collection, Intents } = require('discord.js');
-const { token, guildId } = require('./config.json');
+const { token, guildId, devEnv } = require('./config.json');
 const COMMON = require('./common.json');
 
 // Create a new client instance
@@ -58,6 +58,7 @@ client.once('ready', async () => {
 	module.exports.COMMON = COMMON;
 	module.exports.client = client;
 	module.exports.guild = client.guilds.cache.get(guildId);
+	module.exports.devEnv = devEnv;
 	module.exports.MessagesDb = MessagesDb;
 	module.exports.EgsFreeGamesDb = EgsFreeGamesDb;
 	module.exports.PrimeGamingFreeGamesDb = PrimeGamingFreeGamesDb;
@@ -86,16 +87,26 @@ client.once('ready', async () => {
 
 	// Jobs
 	const { syncMessages } = require('./crons/syncMessages');
-	syncMessages()
+	if (!devEnv) {
+		syncMessages()
+	}
 
 	const { writePostOfTheWeek } = require('./crons/postsOfTheWeek');
-	writePostOfTheWeek()
+	if (!devEnv) {
+		writePostOfTheWeek()
+	}
 
 	const egs = require('./crons/egs');
-	egs.getFreeGames()
+	egs.getFreeGamesJob()
+	if (!devEnv) {
+		await egs.getFreeGames()
+	}
 
 	const primeGaming = require('./crons/primeGaming');
-	primeGaming.getFreeGames()
+	primeGaming.getFreeGamesJob()
+	if (!devEnv) {
+		await primeGaming.getFreeGames()
+	}
 });
 
 client.on('interactionCreate', async interaction => {
