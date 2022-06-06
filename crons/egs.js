@@ -1,13 +1,13 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const CronJob = require('cron').CronJob;
-const {COMMON, client, EgsFreeGamesDb} = require("../index");
+const {COMMON, devEnv, EgsFreeGamesDb} = require("../index");
 const { getChannelById } = require('../helpers/getChannelsInfos');
 const tools = require('../tools/tools');
 const egsUrl = "https://store.epicgames.com";
 module.exports = {
     async getFreeGamesJob() {
         var job = new CronJob(
-            '0 20 * * *',
+            '0 * * * *',
             async function() {
                 await module.exports.getFreeGames()
             },
@@ -28,7 +28,7 @@ module.exports = {
             freeGames = json.data.Catalog.searchStore.elements.filter(g => g.title != "Mystery Game");
         } catch (err) {
             console.log(`Error while checking Epic Games Store free games !`, err)
-            return
+            return false
         }
         await tools.asyncForEach(freeGames, async (game) => {
             const id = game.id;
@@ -51,5 +51,7 @@ module.exports = {
             const channel = await getChannelById(COMMON.channels['🎮videogames'].id)
             channel.send(`Nouveau jeu Epic Games Store gratuit ! ${title} : ${url}`)
         })
+        console.log("Checking Epic Games Store games done.")
+        return true
     }
 };

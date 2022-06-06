@@ -1,4 +1,4 @@
-const { client, COMMON } = require("../index");
+const { client, COMMON, devEnv } = require("../index");
 const CronJob = require('cron').CronJob;
 const { getWeeklyPosts, buildMessageDetailsString } = require('../helpers/getPosts');
 const { getChannelById } = require('../helpers/getChannelsInfos');

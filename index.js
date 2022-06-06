@@ -86,27 +86,23 @@ client.once('ready', async () => {
 	}
 
 	// Jobs
-	const { syncMessages } = require('./crons/syncMessages');
-	if (!devEnv) {
-		syncMessages()
-	}
-
-	const { writePostOfTheWeek } = require('./crons/postsOfTheWeek');
-	if (!devEnv) {
-		writePostOfTheWeek()
-	}
-
 	const egs = require('./crons/egs');
 	egs.getFreeGamesJob()
-	if (!devEnv) {
-		await egs.getFreeGames()
-	}
+	await egs.getFreeGames()
 
 	const primeGaming = require('./crons/primeGaming');
 	primeGaming.getFreeGamesJob()
-	if (!devEnv) {
-		await primeGaming.getFreeGames()
-	}
+	await primeGaming.getFreeGames()
+	
+	const { syncMessages } = require('./crons/syncMessages');
+	await syncMessages()
+
+	const { writePostOfTheWeek } = require('./crons/postsOfTheWeek');
+	writePostOfTheWeek()
+
+	const { shitPostKingOfTheWeek } = require('./crons/shitPostKingOfTheWeek');
+	shitPostKingOfTheWeek()
+
 });
 
 client.on('interactionCreate', async interaction => {

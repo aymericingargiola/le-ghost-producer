@@ -13,6 +13,6 @@ module.exports = {
         d = new Date()
         const day = d.getDay()
         const diff = d.getDate() - day + (day == 0 ? -6:1)
-        return new Date(d.setDate(diff)).getTime()
+        return new Date(d.setDate(diff)).setHours(0, 0, 0, 0)
     }
 }

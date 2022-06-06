@@ -1,6 +1,6 @@
 const playwright = require('playwright');
 const CronJob = require('cron').CronJob;
-const {COMMON, PrimeGamingFreeGamesDb} = require("../index");
+const {COMMON, PrimeGamingFreeGamesDb, devEnv} = require("../index");
 const { getChannelById } = require('../helpers/getChannelsInfos');
 const tools = require('../tools/tools');
 const primeUrl = "https://gaming.amazon.com/home";
@@ -14,7 +14,7 @@ module.exports = {
     },
     async getFreeGamesJob() {
         var job = new CronJob(
-            '0 20 * * *',
+            '0 * * * *',
             async function() {
                 await module.exports.getFreeGames()
             },
@@ -35,11 +35,11 @@ module.exports = {
             const response = await promise;
             freeGames = await response.json();
         } catch (err) {
-            browser.close();
+            await browser.close();
             console.log(`Error while checking Prime Gaming free games !`, err)
+            return false
         }
         await tools.asyncForEach(freeGames.data.games.items, async (game) => {
-            console.log(game.id)
             const id = game.id;
             const isFreeGameExist = await PrimeGamingFreeGamesDb.findOne({ where: { id: id } });
             if (isFreeGameExist) return
@@ -59,7 +59,8 @@ module.exports = {
             channel.send(`[Prime Gaming] **${title}** : <${url}>`)
             return true
         })
-        browser.close();
-        console.log("Checking done.")
+        await browser.close();
+        console.log("Checking Prime Gaming games done.")
+        return true
     }
 };

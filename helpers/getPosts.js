@@ -1,52 +1,27 @@
 const dates = require('../tools/dates');
-const { getUserNameById, getUserNickNameById } = require('./getUserInfos');
+const { getUserNameById, getUserNickNameById, getUserById } = require('./getUserInfos');
 const { getChannelNameById } = require('./getChannelsInfos');
-const { MessagesDb } = require("../index");
+const { MessagesDb, COMMON } = require("../index");
 const { MessageEmbed } = require('discord.js');
+const { MessageAttachment } = require('discord.js');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const Sequelize = require('sequelize');
+const sharp = require('sharp');
 const Op = Sequelize.Op;
 module.exports = {
-    async getPostsByDate(options) {
+    async getPosts({dateBegin, dateEnd, userId, channelId}) {
 		let messages = []
-		if (!options.dateEnd && !options.userId) {
-			messages = await MessagesDb.findAll({
-				where: {
-					date: {
-						[Op.gte]: options.dateBegin
-					}
-				}
-			});
-		} else if (options.dateEnd && !options.userId) {
-			messages = await MessagesDb.findAll({
-				where: {
-					date: {
-						[Op.between]: [options.dateBegin, options.dateEnd]
-					}
-				}
-			});
-		} else if (!options.dateEnd && options.userId) {
-			messages = await MessagesDb.findAll({
-				where: {
-					date: {
-						[Op.gte]: options.dateBegin
-					},
-					userId: {
-						[Op.like]: options.userId
-					}
-				}
-			});
-		} else if (options.dateEnd && options.userId) {
-			messages = await MessagesDb.findAll({
-				where: {
-					date: {
-						[Op.between]: [options.dateBegin, options.dateEnd]
-					},
-					userId: {
-						[Op.like]: options.userId
-					}
-				}
-			});
-		}
+		messages = await MessagesDb.findAll({
+			where: {
+				...((dateBegin || dateEnd) && {date: {
+					...((dateBegin && dateEnd) && {[Op.between]: [dateBegin, dateEnd]}),
+					...((dateBegin && !dateEnd) && {[Op.gte]: dateBegin}),
+					...((!dateBegin && dateEnd) && {[Op.lte]: dateEnd})
+				}}),
+				...(userId && {userId: {[Op.like]: userId}}),
+				...(channelId && {channelId: {[Op.like]: channelId}})
+			}
+		});
         return messages
     },
     async resultByUsers(messages) {
@@ -135,7 +110,7 @@ module.exports = {
     },
 	async getDailyPosts(userId) {
 		const date = dates.today(true)
-		const messages = await module.exports.getPostsByDate({dateBegin: date, userId: userId})
+		const messages = await module.exports.getPosts({dateBegin: date, userId: userId})
 		const resultByUsers = await module.exports.resultByUsers(messages)
 		const resultByChannels = await module.exports.resultByChannels(messages)
 		return {
@@ -143,9 +118,9 @@ module.exports = {
 			byChannels: resultByChannels
 		}
     },
-	async getWeeklyPosts(userId) {
+	async getWeeklyPosts({userId, channelId} = {}) {
 		const date = dates.beginingOfTheWeek()
-		const messages = await module.exports.getPostsByDate({dateBegin: date, userId: userId})
+		const messages = await module.exports.getPosts({dateBegin: date, userId: userId, channelId: channelId})
 		const resultByUsers = await module.exports.resultByUsers(messages)
 		const resultByChannels = await module.exports.resultByChannels(messages)
 		return {
@@ -169,7 +144,7 @@ module.exports = {
 			if (index != 0) {
 				str += '\n'
 			}
-			str += `${(userPosition ? userPosition : index)+1 === 1 ? '👑' : ''} ${userPosition ? userPosition+1 : index+1}${(userPosition ? userPosition : index)+1 === 1 ? 'er' : 'eme'} - ${m.nickname ? m.nickname : m.name} : **${m.number}**\n`
+			str += `${(userPosition ? userPosition : index)+1 === 1 ? '🥇' : (userPosition ? userPosition : index)+1 === 2 ? '🥈' : (userPosition ? userPosition : index)+1 === 3 ? '🥉' : ''}${userPosition+1 > 3 || index+1 > 3 ? `${userPosition ? userPosition+1 : index+1}${(userPosition ? userPosition : index)+1 === 1 ? 'er' : 'eme'}` : ''} - ${m.nickname ? m.nickname : m.name} : **${m.number}**\n`
 			str += "```"
 			arrLoop.forEach((c, index) => {
 				if (index === 0) {
@@ -182,5 +157,32 @@ ${c.nickname ? c.nickname : c.name} : ${c.number}`
 			str += "```"
 		})
 		return str
+	},
+	async buildShitPostKingMessage(messages) {
+		const avatarsPath = "./assets/avatars/"
+		let arr = messages
+		arr.sort(function (a, b) {
+			return b.number - a.number;
+		})
+		const shitPostKingMessages = arr[0].number;
+		const shitPostKingChan = arr[0].chans[0].name;
+		const shitPostKingName = arr[0].nickname ? arr[0].nickname : arr[0].name;
+		const shitPostKingProfile = await getUserById(arr[0].id);
+		const shitPostKingAvatarUrl = shitPostKingProfile.displayAvatarURL();
+		const avatar = await fetch(shitPostKingAvatarUrl);
+		const avatarBuffer = Buffer.from(await avatar.arrayBuffer());
+		const img = await sharp(avatarsPath + 'shitpostking.png')
+		.composite([{ 
+			input: avatarBuffer,
+			top: 210,
+			left: 210
+		}]).toBuffer()
+		const shitpostkingAttachment = new MessageAttachment(img,'shitpostking.png');
+		const message = new MessageEmbed()
+		.setColor('#0099ff')
+		.setTitle(`Félicitation à ${shitPostKingName}, Shitpost King de la semaine !`)
+		.setDescription(`Avec ${shitPostKingMessages} messages dans ${shitPostKingChan}`)
+    	.setImage('attachment://shitpostking.png');
+		return {messages: [message], files: [shitpostkingAttachment]}
 	}
 };
