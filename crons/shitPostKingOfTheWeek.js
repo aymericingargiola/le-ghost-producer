@@ -8,7 +8,7 @@ module.exports = {
             '0 23 * * SUN',
             async function() {
                 console.log("Building Shitpost king of the week...")
-                const channel = await getChannelById(COMMON.channels["🚨annonces📣"].id)
+                const channel = await getChannelById(!devEnv ? COMMON.channels['🎮videogames'].id : COMMON.channels['👻bot'].threads['test-bot'].id)
                 const dailyPosts = await getWeeklyPosts({channelId: COMMON.channels["🤡meme-cemetary"].id})
                 const shitPostKing = await buildShitPostKingMessage(dailyPosts.byUsers)
                 channel.send({ embeds: shitPostKing.messages, files: shitPostKing.files })

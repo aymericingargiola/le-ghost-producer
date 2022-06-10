@@ -55,7 +55,7 @@ module.exports = {
                 endDate: endDate
             });
             console.log(`${title}[${id}] saved to database.`)
-            const channel = await getChannelById(COMMON.channels['🎮videogames'].id)
+            const channel = await getChannelById(!devEnv ? COMMON.channels['🎮videogames'].id : COMMON.channels['👻bot'].threads['test-bot'].id)
             channel.send(`[Prime Gaming] **${title}** : <${url}>`)
             return true
         })

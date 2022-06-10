@@ -1,3 +1,4 @@
+const { devEnv } = require("../index");
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { getWeeklyPosts, buildMessageDetailsString } = require('../helpers/getPosts');
 module.exports = {
@@ -12,7 +13,7 @@ module.exports = {
 	async execute(interaction) {
 		const userPositionOption = interaction.options.getString("position") ? interaction.user.id : null
 		const title = userPositionOption ? "Ta position dans les posteurs de la semaine" : "Posteurs de la semaine"
-		const channel = interaction.channel
+		const channel = !devEnv ? interaction.channel : await getChannelById(COMMON.channels['👻bot'].threads['test-bot'].id)
 		interaction.deferReply()
 		interaction.deleteReply()
 		const dailyPosts = await getWeeklyPosts()

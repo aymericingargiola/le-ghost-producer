@@ -7,7 +7,7 @@ module.exports = {
         var job = new CronJob(
             '0 23 * * SUN',
             async function() {
-                const channel = await getChannelById(COMMON.channels["🚨annonces📣"].id)
+                const channel = await getChannelById(!devEnv ? COMMON.channels['🎮videogames'].id : COMMON.channels['👻bot'].threads['test-bot'].id)
                 const dailyPosts = await getWeeklyPosts()
                 const byUsersDetails = buildMessageDetailsString(dailyPosts.byUsers, "Posteurs de la semaine")
                 channel.send(byUsersDetails)
