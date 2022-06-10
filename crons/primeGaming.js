@@ -36,28 +36,33 @@ module.exports = {
             freeGames = await response.json();
         } catch (err) {
             await browser.close();
-            console.log(`Error while checking Prime Gaming free games !`, err)
+            console.log('Error while checking Prime Gaming free games !', err)
             return false
         }
         await tools.asyncForEach(freeGames.data.games.items, async (game) => {
-            const id = game.id;
-            const isFreeGameExist = await PrimeGamingFreeGamesDb.findOne({ where: { id: id } });
-            if (isFreeGameExist) return
-            const title = game.assets.title;
-            const url = game.assets.externalClaimLink ? game.assets.externalClaimLink : primeUrl;
-            const startDate = game.offers[0].startTime;
-            const endDate = game.offers[0].endTime;
-            console.log(`${title}[${id}] is a new free game !`)
-            await PrimeGamingFreeGamesDb.create({
-                id: id,
-                title: title,
-                startDate: startDate,
-                endDate: endDate
-            });
-            console.log(`${title}[${id}] saved to database.`)
-            const channel = await getChannelById(!devEnv ? COMMON.channels['🎮videogames'].id : COMMON.channels['👻bot'].threads['test-bot'].id)
-            channel.send(`[Prime Gaming] **${title}** : <${url}>`)
-            return true
+            try {
+                const id = game.id;
+                const isFreeGameExist = await PrimeGamingFreeGamesDb.findOne({ where: { id: id } });
+                if (isFreeGameExist) return
+                const title = game.assets.title;
+                const url = game.assets.externalClaimLink ? game.assets.externalClaimLink : primeUrl;
+                const startDate = game.offers[0].startTime;
+                const endDate = game.offers[0].endTime;
+                console.log(`${title}[${id}] is a new free game !`)
+                await PrimeGamingFreeGamesDb.create({
+                    id: id,
+                    title: title,
+                    startDate: startDate,
+                    endDate: endDate
+                });
+                console.log(`${title}[${id}] saved to database.`)
+                const channel = await getChannelById(!devEnv ? COMMON.channels['🎮videogames'].id : COMMON.channels['👻bot'].threads['test-bot'].id)
+                channel.send(`[Prime Gaming] **${title}** : <${url}>`)
+                return true
+            } catch (err) {
+                console.log('Error while adding Prime Gaming free games !', err)
+                return false
+            }
         })
         await browser.close();
         console.log("Checking Prime Gaming games done.")
