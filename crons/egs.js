@@ -22,9 +22,7 @@ module.exports = {
         let freeGames = [];
         try {
             const egsFreeGame = await fetch("https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=fr&country=FR&allowCountries=FR");
-            const response = egsFreeGame.body._outBuffer.toString();
-            const formatResponse = response.substr(0, response.lastIndexOf("{}}") + 3);
-            const json = JSON.parse(formatResponse);
+            const json = await egsFreeGame.json()
             freeGames = json.data.Catalog.searchStore.elements.filter(g => g.title != "Mystery Game");
         } catch (err) {
             console.log(`Error while checking Epic Games Store free games !`, err)
@@ -33,7 +31,7 @@ module.exports = {
         await tools.asyncForEach(freeGames, async (game) => {
             const id = game.id;
             const isFreeGameExist = await EgsFreeGamesDb.findOne({ where: { id: id } });
-            if (isFreeGameExist) return
+            if (isFreeGameExist || !game.promotions || game.promotions.promotionalOffers.length === 0) return
             const title = game.title;
             const offerType = game.offerType.toLowerCase();
             const productSlug = game.productSlug;
