@@ -86,13 +86,13 @@ client.once('ready', async () => {
 	}
 
 	// Jobs
-	const egs = require('./crons/egs');
-	egs.getFreeGamesJob()
-	await egs.getFreeGames()
+	// const egs = require('./crons/egs');
+	// egs.getFreeGamesJob()
+	// await egs.getFreeGames()
 
-	const primeGaming = require('./crons/primeGaming');
-	primeGaming.getFreeGamesJob()
-	await primeGaming.getFreeGames()
+	// const primeGaming = require('./crons/primeGaming');
+	// primeGaming.getFreeGamesJob()
+	// await primeGaming.getFreeGames()
 	
 	const { syncMessages } = require('./crons/syncMessages');
 	await syncMessages()
